@@ -5865,27 +5865,27 @@ async function sendZipToServer(filePath) {
     return result;
 }
 
-async function notifyBuildStarted() {
-    try {
-        var url = `${HOST}git/wiki_build_update`
-        var payload = {"repoName": `${REPO_OWNER}/${REPO_NAME}`, "targetSha": SHA}
-        var raw = JSON.stringify(payload);
-        var requestOptions = {
-            method: 'POST',
-            body: raw,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            redirect: 'follow'
-        };
-        console.log(requestOptions);
-        var result = await FetchFromServer(url, requestOptions);
-    } catch (e) {
-        throw e;
-    }
-
-    return result;
-}
+// async function notifyBuildStarted() {
+//     try {
+//         var url = `${HOST}git/wiki_build_update`
+//         var payload = {"repoName": `${REPO_OWNER}/${REPO_NAME}`, "targetSha": SHA}
+//         var raw = JSON.stringify(payload);
+//         var requestOptions = {
+//             method: 'POST',
+//             body: raw,
+//             headers: {
+//                 "Content-Type": "application/json"
+//             },
+//             redirect: 'follow'
+//         };
+//         console.log(requestOptions);
+//         var result = await FetchFromServer(url, requestOptions);
+//     } catch (e) {
+//         throw e;
+//     }
+//
+//     return result;
+// }
 
 
 async function main() {
@@ -5898,7 +5898,7 @@ async function main() {
         console.log("One or more environment variables undefined");
         process.exit(1);
     }
-    await notifyBuildStarted();
+    //await notifyBuildStarted();
     docId = await getDocId(REPO_NAME);
     console.log("documentId ", docId);
     ThroughDirectory(moveFrom);
