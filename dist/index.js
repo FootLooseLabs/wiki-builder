@@ -5700,7 +5700,7 @@ const { execSync } = __nccwpck_require__(81);
 const FormData = __nccwpck_require__(423);
 
 
-const HOST = 'https://11b4-49-37-246-129.in.ngrok.io/'
+const HOST = 'https://docs.brahma.ai/'
 let REPO_NAME = process.env.GITHUB_REPOSITORY
 const REPO_OWNER = process.env.GITHUB_REPOSITORY_OWNER
 const SHA = process.env.GITHUB_SHA
