@@ -1,4 +1,4 @@
-var moveFrom = "../docs";
+var moveFrom = "../";
 const path = require("path");
 const fs   = require("fs");
 const lineByLine = require('n-readlines');
