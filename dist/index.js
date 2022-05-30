@@ -5701,7 +5701,7 @@ const FormData = __nccwpck_require__(423);
 
 
 const HOST = 'https://11b4-49-37-246-129.in.ngrok.io/'
-const REPO_NAME = process.env.GITHUB_REPOSITORY
+let REPO_NAME = process.env.GITHUB_REPOSITORY
 const REPO_OWNER = process.env.GITHUB_REPOSITORY_OWNER
 const SHA = process.env.GITHUB_SHA
 let docId = ""
@@ -5889,28 +5889,34 @@ async function sendZipToServer(filePath) {
 
 
 async function main() {
-    console.time();
-    console.log("Current directory:", __dirname);
-    console.log("REPO_NAME ", REPO_NAME);
-    console.log("REPO_OWNER ", REPO_OWNER);
-    console.log("SHA ", SHA);
-    if (!REPO_OWNER || !REPO_NAME || !SHA){
-        console.log("One or more environment variables undefined");
-        process.exit(1);
+    try {
+        console.time();
+        console.log("Current directory:", __dirname);
+        console.log("REPO_NAME ", REPO_NAME);
+        console.log("REPO_OWNER ", REPO_OWNER);
+        console.log("SHA ", SHA);
+        if (!REPO_OWNER || !REPO_NAME || !SHA) {
+            console.log("One or more environment variables undefined");
+            process.exit(1);
+        }
+        //await notifyBuildStarted();
+        REPO_NAME = REPO_NAME.split("/")[1]
+        docId = await getDocId(REPO_NAME);
+        console.log("documentId ", docId);
+        ThroughDirectory(moveFrom);
+        console.log(`Found Total ${Files.length}`);
+        await ReadFileAndWriteArtifacts();
+        var docsBuild = execSync('mkdocs build');
+        console.log(docsBuild.toString());
+        var zipName = `${REPO_NAME.trim()}.zip`
+        var zipDir = execSync(`zip -r ${zipName} site/`)
+        console.log(zipDir.toString());
+        await sendZipToServer(`${zipName.trim()}`)
+        console.timeEnd();
+    } catch (e) {
+        console.error(e);
+        throw e;
     }
-    //await notifyBuildStarted();
-    docId = await getDocId(REPO_NAME);
-    console.log("documentId ", docId);
-    ThroughDirectory(moveFrom);
-    console.log(`Found Total ${Files.length}`);
-    await ReadFileAndWriteArtifacts();
-    var docsBuild = execSync('mkdocs build');
-    console.log(docsBuild.toString());
-    var zipName = `${REPO_NAME.trim()}.zip`
-    var zipDir = execSync(`zip -r ${zipName} site/`)
-    console.log(zipDir.toString());
-    await sendZipToServer(`${zipName.trim()}`)
-    console.timeEnd();
 }
 
 

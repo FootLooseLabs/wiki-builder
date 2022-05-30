@@ -223,7 +223,6 @@ async function main() {
         console.timeEnd();
     } catch (e) {
         console.error(e);
-        process.exit(1);
         throw e;
     }
 }
