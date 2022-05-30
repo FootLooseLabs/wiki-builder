@@ -45,6 +45,7 @@ function reverseSortArtifactsBasedOnCursorPos(artifacts) {
 }
 
 function ThroughDirectory(Directory) {
+    console.log("STARTED BUILD PROCESS", Directory);
     fs.readdirSync(Directory).forEach(File => {
         const Absolute = path.join(Directory, File);
         if (fs.statSync(Absolute).isDirectory()) return ThroughDirectory(Absolute);

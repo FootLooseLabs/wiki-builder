@@ -25,4 +25,4 @@ RUN npm install
 
 RUN ls
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["node","index.js"]
