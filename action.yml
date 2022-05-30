@@ -2,8 +2,8 @@ name: "footloose-nyana-wiki-builder"
 description: "Github action to build an nyana wiki"
 author: FootlooseLabs
 runs:
-  using: docker
-  image: Dockerfile
+  using: 'node12'
+  main: 'dist/index.js'
 branding:
   icon: arrow-up-circle
   color: red

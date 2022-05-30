@@ -1,4 +1,4 @@
-var moveFrom = "../";
+var moveFrom = "docs";
 const path = require("path");
 const fs   = require("fs");
 const lineByLine = require('n-readlines');
@@ -144,7 +144,7 @@ async function ReadFile() {
         }
     }
 }
-
+console.log("Current directory:", __dirname);
 ThroughDirectory(moveFrom);
 console.log(Files)
 ReadFile();
