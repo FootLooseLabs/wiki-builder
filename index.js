@@ -4,35 +4,39 @@ const fs   = require("fs");
 const lineByLine = require('n-readlines');
 let Files  = [];
 const fetch =  require('node-fetch')
+const { execSync } = require("child_process");
+const FormData = require('form-data');
 
 
-const HOST = 'http://localhost:8879/'
-const REPO_NAME = "kb_Gridbot_master_document_m4fl4"
-const docId = "9686175d-6bdd-4c9c-b709-6fcde0d4852e"
+const HOST = 'https://11b4-49-37-246-129.in.ngrok.io/'
+const REPO_NAME = process.env.GITHUB_REPOSITORY
+const REPO_OWNER = process.env.GITHUB_REPOSITORY_OWNER
+const SHA = process.env.GITHUB_SHA
+let docId = ""
 
 const AVAILABLE_WIDGET_TYPES = {
-    "image":{targetFunction: getImageHtml},
-    "maths":{targetFunction: getMathsHtml},
-    "worksheet":{targetFunction: getWorksheetHtml},
-    "abstraction":{}
+    "image": {targetFunction: getImageHtml},
+    "maths": {targetFunction: getMathsHtml},
+    "worksheet": {targetFunction: getWorksheetHtml},
+    "abstraction": {}
 }
 
-function getImageHtml(_artefact){
-    if(!_artefact.data){
+function getImageHtml(_artefact) {
+    if (!_artefact.data) {
         return ``
     }
     return `<img src="${_artefact.data.annotatedImage}" alt="Red dot" />`
 }
 
 function getMathsHtml(_artefact) {
-    if(!_artefact.data){
+    if (!_artefact.data) {
         return ``
     }
-    return `<div>$$ ${_artefact.data} $$</div>`
+    return `$$ ${_artefact.data} $$`
 }
 
-function getWorksheetHtml(_artefact){
-    if(!_artefact.data){
+function getWorksheetHtml(_artefact) {
+    if (!_artefact.data) {
         return ``
     }
     return `<worksheet-viewer data-uid="${_artefact.uid}">
@@ -41,7 +45,7 @@ function getWorksheetHtml(_artefact){
 }
 
 function reverseSortArtifactsBasedOnCursorPos(artifacts) {
-    return artifacts.sort((a,b) => b.jsonData[0].cursor.line - a.jsonData[0].cursor.line);
+    return artifacts.sort((a, b) => b.jsonData[0].cursor.line - a.jsonData[0].cursor.line);
 }
 
 function ThroughDirectory(Directory) {
@@ -57,29 +61,31 @@ async function FetchFromServer(_url, requestOptions) {
     try {
         var _fetch = await fetch(_url, requestOptions)
     } catch (e) {
+        console.log("Fetch", e);
         throw e;
     }
-    try{
-        var response  =  await _fetch.json();
-    }catch(e){
+    try {
+        var response = await _fetch.json();
+    } catch (e) {
+        console.log("Fetch", e);
         throw e;
     }
 
-    if(_fetch.status === 200){
+    if (_fetch.status === 200 || _fetch.status === 201) {
         return response
     }
     throw response;
 }
 
-function getDocId(repo_name){
-    try{
-        let url = `${HOST}docs/${repo_name}`;
+async function getDocId(repo_name) {
+    try {
+        let url = `${HOST}docs/repo/${repo_name}`;
         var requestOptions = {
             method: 'GET',
             redirect: 'follow'
         };
-        var response =  FetchFromServer(url, requestOptions);
-    }catch (e) {
+        var response = await FetchFromServer(url, requestOptions);
+    } catch (e) {
         throw e;
     }
 
@@ -100,7 +106,6 @@ async function checkIfFileHasArtifact(fileName, docId) {
     } catch (e) {
         throw e;
     }
-    console.log("artifact result ", result, fileName);
     if (result.length > 0) {
         return result;
     } else {
@@ -108,44 +113,113 @@ async function checkIfFileHasArtifact(fileName, docId) {
     }
 }
 
-async function ReadFile() {
+async function ReadFileAndWriteArtifacts() {
     for (var filePath of Files) {
         try {
             var artifacts = await checkIfFileHasArtifact(filePath, docId)
         } catch (e) {
-            console.error("Error ", e);
             continue;
         }
         const liner = new lineByLine(filePath);
         let line;
         let lineNumber = 0;
-        console.log(filePath)
+        console.log(`${filePath} has ${artifacts.length} artifacts`)
         let fileData = []
         while (line = liner.next()) {
-            //console.log('Line ' + lineNumber + ': ' + line.toString('ascii'));
             fileData[lineNumber] = line.toString('ascii');
             lineNumber++;
         }
-        artifacts  = reverseSortArtifactsBasedOnCursorPos(artifacts)
-        var id = ""
-        for(var artifact of artifacts){
+        console.log(`${filePath} has ${fileData.length} lines before writing artifacts`)
+        artifacts = reverseSortArtifactsBasedOnCursorPos(artifacts)
+        for (var artifact of artifacts) {
             var data = artifact.jsonData[0];
             var cursor = data.cursor;
-            var cType  =  data.config.cType;
-            var getCtype  = AVAILABLE_WIDGET_TYPES[cType];
+            var cType = data.config.cType;
+            var getCtype = AVAILABLE_WIDGET_TYPES[cType];
             var widgetLineNumber = cursor.line;
-            id = artifact.id;
-            var html = getCtype.targetFunction.call(this,data);
-            fileData.splice(widgetLineNumber,0,html);
+            var html = getCtype.targetFunction.call(this, data);
+            fileData.splice(widgetLineNumber, 0, html);
         }
-        var logger = fs.createWriteStream(`log${id}.txt`)
-        for(var _fileData of fileData){
+        console.log(`${filePath} has ${fileData.length} lines after writing artifacts`)
+        var logger = fs.createWriteStream(`${filePath}`)
+        for (var _fileData of fileData) {
             logger.write(_fileData)
             logger.write("\n")
         }
+        console.log(`Finished writing ${filePath}`);
     }
 }
-console.log("Current directory:", __dirname);
-ThroughDirectory(moveFrom);
-console.log(Files)
-ReadFile();
+
+async function sendZipToServer(filePath) {
+    console.log(`Sending zip to server ${filePath}`);
+    const form = new FormData();
+    form.append('buildZip', fs.createReadStream(filePath));
+    const options = {
+        method: 'POST',
+        redirect: 'follow',
+        body: form,
+        headers: {...form.getHeaders(), maxContentLength: Infinity}
+    };
+
+    try {
+        var _uploadUrl = `${HOST}upload-build`
+        //console.log(_uploadUrl, options);
+        var result = await FetchFromServer(_uploadUrl, options);
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
+    console.log("File Uploaded ", result);
+    return result;
+}
+
+async function notifyBuildStarted() {
+    try {
+        var url = `${HOST}git/wiki_build_update`
+        var payload = {"repoName": `${REPO_OWNER}/${REPO_NAME}`, "targetSha": SHA}
+        var raw = JSON.stringify(payload);
+        var requestOptions = {
+            method: 'POST',
+            body: raw,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            redirect: 'follow'
+        };
+        console.log(requestOptions);
+        var result = await FetchFromServer(url, requestOptions);
+    } catch (e) {
+        throw e;
+    }
+
+    return result;
+}
+
+
+async function main() {
+    console.time();
+    console.log("Current directory:", __dirname);
+    console.log("REPO_NAME ", REPO_NAME);
+    console.log("REPO_OWNER ", REPO_OWNER);
+    console.log("SHA ", SHA);
+    if (!REPO_OWNER || !REPO_NAME || !SHA){
+        console.log("One or more environment variables undefined");
+        process.exit(1);
+    }
+    await notifyBuildStarted();
+    docId = await getDocId(REPO_NAME);
+    console.log("documentId ", docId);
+    ThroughDirectory(moveFrom);
+    console.log(`Found Total ${Files.length}`);
+    await ReadFileAndWriteArtifacts();
+    var docsBuild = execSync('mkdocs build');
+    console.log(docsBuild.toString());
+    var zipName = `${REPO_NAME.trim()}.zip`
+    var zipDir = execSync(`zip -r ${zipName} site/`)
+    console.log(zipDir.toString());
+    await sendZipToServer(`${zipName.trim()}`)
+    console.timeEnd();
+}
+
+
+main();
