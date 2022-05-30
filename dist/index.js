@@ -4203,7 +4203,6 @@ function reverseSortArtifactsBasedOnCursorPos(artifacts) {
 }
 
 function ThroughDirectory(Directory) {
-    console.log("STARTED BUILD PROCESS", Directory);
     fs.readdirSync(Directory).forEach(File => {
         const Absolute = path.join(Directory, File);
         if (fs.statSync(Absolute).isDirectory()) return ThroughDirectory(Absolute);
@@ -4212,6 +4211,7 @@ function ThroughDirectory(Directory) {
 }
 
 async function FetchFromServer(_url, requestOptions) {
+    console.log("Making Request ", _url)
     try {
         var _fetch = await fetch(_url, requestOptions)
     } catch (e) {
@@ -4271,6 +4271,7 @@ async function ReadFile() {
         try {
             var artifacts = await checkIfFileHasArtifact(filePath, docId)
         } catch (e) {
+            console.error("Error ", e);
             continue;
         }
         const liner = new lineByLine(filePath);
