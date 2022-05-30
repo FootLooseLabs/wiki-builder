@@ -1,0 +1,9 @@
+name: "footloose-nyana-wiki-builder"
+description: "Github action to build an nyana wiki"
+author: FootlooseLabs
+runs:
+  using: docker
+  image: Dockerfile
+branding:
+  icon: arrow-up-circle
+  color: red
