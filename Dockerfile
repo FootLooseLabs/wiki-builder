@@ -13,11 +13,7 @@ RUN npm -g config set user root
 
 RUN npm i -g npm@latest
 
-ADD package.json /package.json
-
-ADD index.js /index.js
-
-ADD entrypoint.sh /entrypoint.sh
+ADD . .
 
 RUN chmod +x /entrypoint.sh
 
