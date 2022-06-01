@@ -5708,7 +5708,7 @@ const AVAILABLE_WIDGET_TYPES = {
     "image": {targetFunction: getImageHtml},
     "maths": {targetFunction: getMathsHtml},
     "worksheet": {targetFunction: getWorksheetHtml},
-    "abstraction": {}
+    "abstraction": {targetFunction: getAbstractionHtml},
 }
 
 function getImageHtml(_artefact) {
@@ -5729,9 +5729,14 @@ function getWorksheetHtml(_artefact) {
     if (!_artefact.data) {
         return ``
     }
-    return `<worksheet-viewer data-uid="${_artefact.uid}">
-			${JSON.stringify(_artefact)}
-		</worksheet-viewer>`
+    return `<div class="worksheet">${JSON.stringify(_artefact.data)}</div>`
+}
+
+function getAbstractionHtml(_artefact) {
+    if (!_artefact.data) {
+        return ``
+    }
+    return `<div class="abstraction">${_artefact.data.trim()}</div>`
 }
 
 function reverseSortArtifactsBasedOnCursorPos(artifacts) {
@@ -5801,6 +5806,7 @@ async function ReadFileAndWriteArtifacts() {
         } catch (e) {
             continue;
         }
+        filePath =  Buffer.from(filePath, 'base64').toString('ascii');
         const liner = new lineByLine(filePath);
         let line;
         let lineNumber = 0;
