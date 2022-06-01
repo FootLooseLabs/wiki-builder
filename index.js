@@ -87,8 +87,7 @@ async function getDocArtifacts(repo_name) {
 }
 
 async function checkIfFileHasArtifact(fileName, docId) {
-    fileName = fileName.split("../").join("");
-    var _filePathBase64 = Buffer.from(fileName).toString('base64')
+    var _filePathBase64 = fileName
     var requestOptions = {
         method: 'GET',
         redirect: 'follow',
