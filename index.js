@@ -1,10 +1,8 @@
-var moveFrom = "docs";
-const path = require("path");
-const fs   = require("fs");
+const fs = require("fs");
 const lineByLine = require('n-readlines');
-let Files  = [];
-const fetch =  require('node-fetch')
-const { execSync } = require("child_process");
+let Files = [];
+const fetch = require('node-fetch')
+const {execSync} = require("child_process");
 const FormData = require('form-data');
 
 
@@ -48,14 +46,6 @@ function reverseSortArtifactsBasedOnCursorPos(artifacts) {
     return artifacts.sort((a, b) => b.jsonData[0].cursor.line - a.jsonData[0].cursor.line);
 }
 
-function ThroughDirectory(Directory) {
-    fs.readdirSync(Directory).forEach(File => {
-        const Absolute = path.join(Directory, File);
-        if (fs.statSync(Absolute).isDirectory()) return ThroughDirectory(Absolute);
-        else return Files.push(Absolute);
-    });
-}
-
 async function FetchFromServer(_url, requestOptions) {
     console.log("Making Request ", _url)
     try {
@@ -77,9 +67,9 @@ async function FetchFromServer(_url, requestOptions) {
     throw response;
 }
 
-async function getDocId(repo_name) {
+async function getDocArtifacts(repo_name) {
     try {
-        let url = `${HOST}docs/repo/${repo_name}`;
+        let url = `${HOST}docs/repo/${repo_name}/artifact`;
         var requestOptions = {
             method: 'GET',
             redirect: 'follow'
@@ -88,8 +78,7 @@ async function getDocId(repo_name) {
     } catch (e) {
         throw e;
     }
-
-    return response.id;
+    return response;
 }
 
 async function checkIfFileHasArtifact(fileName, docId) {
@@ -173,29 +162,6 @@ async function sendZipToServer(filePath) {
     return result;
 }
 
-// async function notifyBuildStarted() {
-//     try {
-//         var url = `${HOST}git/wiki_build_update`
-//         var payload = {"repoName": `${REPO_OWNER}/${REPO_NAME}`, "targetSha": SHA}
-//         var raw = JSON.stringify(payload);
-//         var requestOptions = {
-//             method: 'POST',
-//             body: raw,
-//             headers: {
-//                 "Content-Type": "application/json"
-//             },
-//             redirect: 'follow'
-//         };
-//         console.log(requestOptions);
-//         var result = await FetchFromServer(url, requestOptions);
-//     } catch (e) {
-//         throw e;
-//     }
-//
-//     return result;
-// }
-
-
 async function main() {
     try {
         console.time();
@@ -207,13 +173,17 @@ async function main() {
             console.log("One or more environment variables undefined");
             process.exit(1);
         }
-        //await notifyBuildStarted();
         REPO_NAME = REPO_NAME.split("/")[1]
-        docId = await getDocId(REPO_NAME);
-        console.log("documentId ", docId);
-        ThroughDirectory(moveFrom);
-        console.log(`Found Total ${Files.length}`);
-        await ReadFileAndWriteArtifacts();
+        var {artifacts, documentId} = await getDocArtifacts(REPO_NAME);
+        docId = documentId;
+        console.log("Found Artifacts in document  ", artifacts.length);
+        var filePath = new Set();
+        for (var artifact of artifacts) {
+            filePath.add(artifact.filePath);
+        }
+        Files = [...filePath];
+        console.log(`Found Total ${Files.length} file to be modified`);
+        await ReadFileAndWriteArtifacts(artifacts);
         var docsBuild = execSync('mkdocs build');
         console.log(docsBuild.toString());
         var zipName = `${REPO_NAME.trim()}.zip`
