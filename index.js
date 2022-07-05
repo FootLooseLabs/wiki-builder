@@ -4,7 +4,7 @@ let Files = [];
 const fetch = require('node-fetch')
 const {execSync} = require("child_process");
 const FormData = require('form-data');
-const http = require("http");
+const https = require("https");
 
 const BASE_CONFIG_URL = 'https://s3.ap-south-1.amazonaws.com/static.footloose.io/mkdocs-base-config/base.yml'
 const HOST = 'https://docs.brahma.ai/'
@@ -169,14 +169,17 @@ async function sendZipToServer(filePath) {
 }
 
 async function downloadBaseConfigYML(){
-    const file = fs.createWriteStream("base.yml");
-    const request = http.get(BASE_CONFIG_URL, function(response) {
-        response.pipe(file);
-        file.on("finish", () => {
-            file.close();
-            console.log("Download Completed");
+    return new Promise(async (resolve, reject) => {
+        const file = fs.createWriteStream("base.yml");
+        const request = await https.get(BASE_CONFIG_URL, function (response) {
+            response.pipe(file);
+            file.on("finish", () => {
+                file.close();
+                console.log("Download Completed");
+                resolve();
+            });
         });
-    });
+    })
 }
 
 async function main() {

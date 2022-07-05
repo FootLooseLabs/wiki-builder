@@ -5696,7 +5696,7 @@ let Files = [];
 const fetch = __nccwpck_require__(306)
 const {execSync} = __nccwpck_require__(81);
 const FormData = __nccwpck_require__(423);
-const http = __nccwpck_require__(685);
+const https = __nccwpck_require__(687);
 
 const BASE_CONFIG_URL = 'https://s3.ap-south-1.amazonaws.com/static.footloose.io/mkdocs-base-config/base.yml'
 const HOST = 'https://docs.brahma.ai/'
@@ -5861,14 +5861,17 @@ async function sendZipToServer(filePath) {
 }
 
 async function downloadBaseConfigYML(){
-    const file = fs.createWriteStream("base.yml");
-    const request = http.get(BASE_CONFIG_URL, function(response) {
-        response.pipe(file);
-        file.on("finish", () => {
-            file.close();
-            console.log("Download Completed");
+    return new Promise(async (resolve, reject) => {
+        const file = fs.createWriteStream("base.yml");
+        const request = await https.get(BASE_CONFIG_URL, function (response) {
+            response.pipe(file);
+            file.on("finish", () => {
+                file.close();
+                console.log("Download Completed");
+                resolve();
+            });
         });
-    });
+    })
 }
 
 async function main() {
