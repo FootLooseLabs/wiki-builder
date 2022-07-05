@@ -4,8 +4,9 @@ let Files = [];
 const fetch = require('node-fetch')
 const {execSync} = require("child_process");
 const FormData = require('form-data');
+const http = require("http");
 
-
+const BASE_CONFIG_URL = 'https://s3.ap-south-1.amazonaws.com/static.footloose.io/mkdocs-base-config/base.yml'
 const HOST = 'https://docs.brahma.ai/'
 let REPO_NAME = process.env.GITHUB_REPOSITORY
 const REPO_OWNER = process.env.GITHUB_REPOSITORY_OWNER
@@ -167,6 +168,17 @@ async function sendZipToServer(filePath) {
     return result;
 }
 
+async function downloadBaseConfigYML(){
+    const file = fs.createWriteStream("base.yml");
+    const request = http.get(BASE_CONFIG_URL, function(response) {
+        response.pipe(file);
+        file.on("finish", () => {
+            file.close();
+            console.log("Download Completed");
+        });
+    });
+}
+
 async function main() {
     try {
         console.time();
@@ -178,6 +190,7 @@ async function main() {
             console.log("One or more environment variables undefined");
             process.exit(1);
         }
+        await downloadBaseConfigYML();
         REPO_NAME = REPO_NAME.split("/")[1]
         var {artifacts, documentId} = await getDocArtifacts(REPO_NAME);
         docId = documentId;
