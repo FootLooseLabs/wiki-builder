@@ -5806,7 +5806,7 @@ async function ReadFileAndWriteArtifacts() {
         } catch (e) {
             continue;
         }
-        filePath =  Buffer.from(filePath, 'base64').toString('ascii');
+        filePath = Buffer.from(filePath, 'base64').toString('ascii');
         const liner = new lineByLine(filePath);
         let line;
         let lineNumber = 0;
@@ -5860,7 +5860,7 @@ async function sendZipToServer(filePath) {
     return result;
 }
 
-async function downloadBaseConfigYML(){
+async function downloadBaseConfigYML() {
     return new Promise(async (resolve, reject) => {
         const file = fs.createWriteStream("base.yml");
         const request = await https.get(BASE_CONFIG_URL, function (response) {
@@ -5872,6 +5872,12 @@ async function downloadBaseConfigYML(){
             });
         });
     })
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 }
 
 async function main() {
@@ -5897,6 +5903,7 @@ async function main() {
         Files = [...filePath];
         console.log(`Found Total ${Files.length} file to be modified`);
         await ReadFileAndWriteArtifacts(artifacts);
+        await sleep(2000);
         var docsBuild = execSync('mkdocs build');
         console.log(docsBuild.toString());
         var zipName = `${REPO_NAME.trim()}.zip`
