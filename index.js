@@ -13,11 +13,17 @@ const REPO_OWNER = process.env.GITHUB_REPOSITORY_OWNER
 const SHA = process.env.GITHUB_SHA
 let docId = ""
 
+const DEFAULT_ARTIFACT_PROCESSOR = {
+    targetFunction: getHtml
+}
+
 const AVAILABLE_WIDGET_TYPES = {
     "image": {targetFunction: getImageHtml},
     "maths": {targetFunction: getMathsHtml},
     "worksheet": {targetFunction: getWorksheetHtml},
     "abstraction": {targetFunction: getAbstractionHtml},
+    "html":{targetFunction: getHtml},
+    "table":{targetFunction: getHtml},
 }
 
 function getImageHtml(_artefact) {
@@ -46,6 +52,13 @@ function getAbstractionHtml(_artefact) {
         return ``
     }
     return `<div class="abstraction">${_artefact.data.trim()}</div>`
+}
+
+function getHtml(_artefact) {
+    if (!_artefact.data) {
+        return ``
+    }
+    return `<div>${_artefact.data.trim()}</div>`
 }
 
 function reverseSortArtifactsBasedOnCursorPos(artifacts) {
@@ -130,7 +143,7 @@ async function ReadFileAndWriteArtifacts() {
             var data = artifact.jsonData[0];
             var cursor = data.cursor;
             var cType = data.config.cType;
-            var getCtype = AVAILABLE_WIDGET_TYPES[cType];
+            var getCtype = AVAILABLE_WIDGET_TYPES[cType] || DEFAULT_ARTIFACT_PROCESSOR;
             var widgetLineNumber = cursor.line;
             var html = getCtype.targetFunction.call(this, data);
             fileData.splice(widgetLineNumber, 0, html);
