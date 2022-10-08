@@ -5,13 +5,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "ncc build index.js"
+    "build": "ncc build index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "form-data": "^4.0.0",
+    "js-yaml": "^4.1.0",
+    "md-to-pdf": "^5.1.0",
+    "merge-pdf-buffers": "^1.0.3",
     "n-readlines": "^1.0.1",
     "node-fetch": "^2.6.7"
   }
