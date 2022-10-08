@@ -5920,7 +5920,7 @@ async function main() {
         var docsBuild = execSync('mkdocs build');
         console.log(docsBuild.toString());
         var zipName = `${REPO_NAME.trim()}.zip`
-        var zipDir = execSync(`zip -r ${zipName} site/`)
+        var zipDir = execSync(`zip -r ${zipName} ./`)
         console.log(zipDir.toString());
         await sendZipToServer(`${zipName.trim()}`)
         console.timeEnd();
